@@ -1,0 +1,293 @@
+{
+  "entities": {
+    "Wall": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Wall",
+      "type": "object",
+      "description": "Represents a virtual wall where users can post content.",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Reference to User who owns the wall. (Relationship: User 1:N Wall)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the wall."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the wall."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the wall was created.",
+          "format": "date-time"
+        },
+        "privacySetting": {
+          "type": "string",
+          "description": "Privacy setting of the wall (e.g., public, private, shared)."
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "createdAt",
+        "privacySetting"
+      ]
+    },
+    "Content": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Content",
+      "type": "object",
+      "description": "Represents content posted on a wall.",
+      "properties": {
+        "wallId": {
+          "type": "string",
+          "description": "Reference to Wall on which the content is posted. (Relationship: Wall 1:N Content)"
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Reference to User who posted the content. (Relationship: User 1:N Content)"
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of content (e.g., text, image, link)."
+        },
+        "data": {
+          "type": "string",
+          "description": "Content data (e.g., text content, image URL, link URL)."
+        },
+        "position": {
+          "type": "object",
+          "description": "Position of the content on the wall.",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the content was posted.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "wallId",
+        "authorId",
+        "type",
+        "data",
+        "createdAt",
+        "position"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the SwissBoard platform.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's display name."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "email",
+        "name",
+        "createdAt"
+      ]
+    },
+    "WallAccess": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WallAccess",
+      "type": "object",
+      "description": "Represents user access rights for a specific wall.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the WallAccess entity."
+        },
+        "wallId": {
+          "type": "string",
+          "description": "Reference to the Wall. (Relationship: Wall 1:N WallAccess)"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User. (Relationship: User 1:N WallAccess)"
+        },
+        "accessType": {
+          "type": "string",
+          "description": "Type of access (e.g., view, comment, edit)."
+        }
+      },
+      "required": [
+        "id",
+        "wallId",
+        "userId",
+        "accessType"
+      ]
+    },
+    "Moderation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Moderation",
+      "type": "object",
+      "description": "Represents content moderation results",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Moderation entity."
+        },
+        "contentId": {
+          "type": "string",
+          "description": "Reference to the Content being moderated. (Relationship: Content 1:N Moderation)"
+        },
+        "flagHarmful": {
+          "type": "boolean",
+          "description": "Flag indicating if the content is considered harmful."
+        },
+        "flagCopyrighted": {
+          "type": "boolean",
+          "description": "Flag indicating if the content is considered copyrighted."
+        },
+        "flagIllegal": {
+          "type": "boolean",
+          "description": "Flag indicating if the content is considered illegal."
+        },
+        "moderationDate": {
+          "type": "string",
+          "description": "Timestamp indicating when the content was moderated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "contentId",
+        "flagHarmful",
+        "flagCopyrighted",
+        "flagIllegal",
+        "moderationDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Path-based ownership enforced. Includes the user's unique ID as {userId}.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/walls/{wallId}",
+        "definition": {
+          "entityName": "Wall",
+          "schema": {
+            "$ref": "#/backend/entities/Wall"
+          },
+          "description": "Stores wall data owned by a specific user. Includes denormalized 'ownerId' and 'members' map for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who owns the wall."
+            },
+            {
+              "name": "wallId",
+              "description": "The unique identifier of the wall."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/walls/{wallId}/content/{contentId}",
+        "definition": {
+          "entityName": "Content",
+          "schema": {
+            "$ref": "#/backend/entities/Content"
+          },
+          "description": "Stores content posted on a specific wall. Includes denormalized 'authorId' and a copy of the parent wall's 'members' map for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who owns the wall."
+            },
+            {
+              "name": "wallId",
+              "description": "The unique identifier of the wall."
+            },
+            {
+              "name": "contentId",
+              "description": "The unique identifier of the content."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/wall_access/{wallAccessId}",
+        "definition": {
+          "entityName": "WallAccess",
+          "schema": {
+            "$ref": "#/backend/entities/WallAccess"
+          },
+          "description": "Stores user access rights for walls. Includes 'wallId', 'userId', and 'accessType' for efficient access control management.",
+          "params": [
+            {
+              "name": "wallAccessId",
+              "description": "The unique identifier for the WallAccess entity."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/moderation/{moderationId}",
+        "definition": {
+          "entityName": "Moderation",
+          "schema": {
+            "$ref": "#/backend/entities/Moderation"
+          },
+          "description": "Stores content moderation results. Includes 'contentId' to reference the content being moderated.",
+          "params": [
+            {
+              "name": "moderationId",
+              "description": "The unique identifier for the Moderation entity."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure data privacy, compliance with Swiss data protection laws, and efficient collaboration within the SwissBoard application.  Authorization Independence is achieved via denormalization. Wall ownership and access control lists are denormalized into the Content and WallAccess collections, eliminating the need for `get()` calls in security rules. This enables atomic operations and improves security rule evaluation. Structural Segregation is applied to ensure homogeneous security postures for all documents within a collection.  For example, all documents in `/users/{userId}/walls/{wallId}/content` share the same ownership-based security requirements.\n\n*   **Users:** User data is stored in `/users/{userId}` for private user data and leverages path-based ownership. This also easily supports listing operations, as each user can only access documents under their own path.\n*   **Walls:** Walls are stored as subcollections under users (`/users/{userId}/walls/{wallId}`). This enforces clear ownership. Wall metadata includes `ownerId`, `privacySetting`, and a `members` map for collaborative access.\n*   **Content:** Content is stored as a subcollection of Walls (`/users/{userId}/walls/{wallId}/content/{contentId}`).  Each document includes the `authorId` and a denormalized copy of the wall's `members` map. This denormalization is CRITICAL for authorization independence, allowing content access rules to be evaluated without needing to read the parent Wall document. Content can then be listed and filtered independently without insecure rules.\n*   **WallAccess:** WallAccess entities are stored in `/wall_access/{wallAccessId}`. Each document denormalizes the `wallId`, `userId`, and `accessType`, making it easy to query and manage user access to walls using security rules.\n*   **Moderation:** Content moderation results are stored in a top-level `/moderation/{moderationId}` collection, with each document referencing the `contentId` being moderated. This allows for easy querying and analysis of moderation data across all content. It's separated because these have completely different security concerns compared to user data.\n*   **Global Roles:**  While not explicitly requested, if roles are needed they should be handled with collection lookups e.g. `/roles_admin/{userId}`.\n\nThe structure ensures QAPs through structural segregation and membership maps.  The separation of user data, wall data, content data, and moderation data into distinct collections with clear ownership semantics enables efficient and secure listing operations. Denormalization of wall access information into content documents allows for content listing based on user access rights without requiring complex rule logic or insecure queries."
+  }
+}

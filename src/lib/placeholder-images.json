@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "1",
+      "description": "Abstrakter farbenfroher Hintergrund",
+      "imageUrl": "https://images.unsplash.com/photo-1705254613735-1abb457f8a60?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxhYnN0cmFjdCUyMGNvbG9yZnVsfGVufDB8fHx8MTc2OTc0NDQ3Mnww&ixlib=rb-4.1.0&q=80&w=400",
+      "imageHint": "abstrakt farbenfroh"
+    },
+    {
+      "id": "2",
+      "description": "Team-Brainstorming",
+      "imageUrl": "https://images.unsplash.com/photo-1552664730-d307ca884978?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx0ZWFtJTIwY29sbGFib3JhdGlvbnxlbnwwfHx8fDE3NzAwNzM1MDF8MA&ixlib=rb-4.1.0&q=80&w=400",
+      "imageHint": "teamarbeit brainstorming"
+    },
+    {
+      "id": "3",
+      "description": "Schweizer Alpen",
+      "imageUrl": "https://images.unsplash.com/photo-1537724738484-3d2353ae66de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzd2lzcyUyMGFscHN8ZW58MHx8fHwxNzcwMDczNTMxfDA&ixlib=rb-4.1.0&q=80&w=400",
+      "imageHint": "schweiz alpen"
+    },
+    {
+      "id": "4",
+      "description": "Notizbuch und Stift",
+      "imageUrl": "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsZWFybmluZyUyMG5vdGVzZGVufDB8fHx8MTc3MDA3MzU1N3ww&ixlib=rb-4.1.0&q=80&w=400",
+      "imageHint": "lernen notizen"
+    }
+  ]
+}

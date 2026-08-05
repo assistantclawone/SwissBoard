@@ -1,0 +1,160 @@
+/**
+ * This ruleset enforces a strict user-ownership security model with support for
+ * collaborative "walls". It is designed for rapid prototyping, focusing on
+ * authorization (who can access what) rather than data validation (the shape of
+ * the data).
+ *
+ * Core Philosophy:
+ * - By default, all data is private. Access must be explicitly granted.
+ * - A user has full control over their own data stored under their user ID.
+ * - Data can be shared with specific collaborators through a "members" map
+ *   denormalized onto shared documents like "walls".
+ *
+ * Data Structure:
+ * - /users/{userId}: Private user profile data.
+ * - /users/{userId}/walls/{wallId}: Walls owned by a user. These documents can
+ *   be shared with other users.
+ * - /users/{userId}/walls/{wallId}/content/{contentId}: Content posted on a
+ *   wall. Access is inherited from the parent wall.
+ * - /wall_access/{wallAccessId}: A collection intended for backend processes to
+ *   manage wall permissions. Client-side writes are disabled.
+ * - /moderation/{moderationId}: A collection for storing content moderation
+ *   results. This is locked down from all client access and is intended for
+ *   use by trusted backend services or admin roles only.
+ *
+ * Key Security Decisions:
+ * - Denormalization for Authorization: To ensure fast and secure access checks,
+ *   collaborative documents (walls) are expected to contain a 'members' map
+ *   (e.g., `{ members: { 'uid1': 'viewer', 'uid2': 'editor' } }`). Security rules
+ *   for subcollections (like content) rely on a `get()` call to the parent wall
+ *   document to check this map, granting access to the owner and all members.
+ * - No User Listing: To protect user privacy, it is not possible for any client
+ *   to list all documents in the top-level `/users` collection.
+ * - Backend-Managed Collections: The `/wall_access` and `/moderation`
+ *   collections are locked down from client-side writes. It is assumed that
+ *   these will be managed by trusted backend code (e.g., Cloud Functions) with
+ *   elevated privileges.
+ * - Relational Integrity: On document creation, rules validate that ownership
+ *   fields (like `id` or `ownerId`) correctly match the user's authentication ID
+ *   and the document path. On update, these critical fields are enforced as
+ *   immutable to prevent re-assigning ownership.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions to improve readability and reuse of logic.
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the primary function for enforcing document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the authenticated user is the owner or a member of a given wall.
+     * This function performs a read on the wall document to check its members map.
+     */
+    function canAccessWall(userId, wallId) {
+      let wall = get(/databases/$(database)/documents/users/$(userId)/walls/$(wallId));
+      return isOwner(userId) || (wall.data.members != null && request.auth.uid in wall.data.members);
+    }
+
+
+    /**
+     * @description Manages user profile data. Only the user themselves can create,
+     * read, or modify their own profile document. Listing all users is disabled.
+     * @path /users/{userId}
+     * @allow (create) A new user signing up: auth.uid matches {userId}.
+     * @allow (get) An authenticated user reading their own profile.
+     * @deny (list) Any user trying to list all documents in the /users collection.
+     * @deny (update) A user trying to modify another user's profile.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Manages collaborative walls owned by a user. The owner has full
+     * control. Other users can be granted read access if they are in the wall's
+     * 'members' map.
+     * @path /users/{userId}/walls/{wallId}
+     * @allow (create) The user specified in {userId} creating a new wall.
+     * @allow (get) A user in the wall's `members` map reading the wall.
+     * @deny (update) A member of a wall trying to change its title. Only the owner can.
+     * @deny (list) A user trying to list walls belonging to another user.
+     * @principle Enforces document ownership for writes and shared access for reads.
+     */
+    match /users/{userId}/walls/{wallId} {
+      allow get: if isSignedIn() && (isOwner(userId) || (resource.data.members != null && request.auth.uid in resource.data.members));
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.ownerId == userId;
+      allow update: if isOwner(userId) && resource != null && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Manages content posted to a wall. Access is derived from the
+     * parent wall's membership. Members of a wall can post and read content, but
+     * only the original author of a piece of content can edit or delete it.
+     * @path /users/{userId}/walls/{wallId}/content/{contentId}
+     * @allow (create) A member of the parent wall posting new content.
+     * @allow (get) A member of the parent wall reading content.
+     * @deny (update) A user trying to edit content they did not author.
+     * @deny (delete) The wall owner trying to delete content authored by someone else.
+     * @principle Inherits permissions from a parent document and enforces author-only writes.
+     */
+    match /users/{userId}/walls/{wallId}/content/{contentId} {
+      allow get, list: if isSignedIn() && canAccessWall(userId, wallId);
+      allow create: if isSignedIn() && canAccessWall(userId, wallId) && request.resource.data.authorId == request.auth.uid && request.resource.data.wallId == wallId;
+      allow update: if resource != null && isOwner(resource.data.authorId) && request.resource.data.authorId == resource.data.authorId && request.resource.data.wallId == resource.data.wallId;
+      allow delete: if resource != null && isOwner(resource.data.authorId);
+    }
+
+    /**
+     * @description Manages explicit access grants. This collection is intended to be
+     * managed by a trusted backend service (e.g., Cloud Functions). Client-side writes
+     * are disabled to prevent users from granting themselves permissions.
+     * @path /wall_access/{wallAccessId}
+     * @allow (get) A user reading an access document that pertains to them.
+     * @deny (create) Any client trying to create a new access grant.
+     * @deny (list) Any client trying to list all access grants in the system.
+     * @principle Restricts sensitive operations to trusted server environments.
+     */
+    match /wall_access/{wallAccessId} {
+      allow get: if resource != null && isOwner(resource.data.userId);
+      allow list: if false;
+      allow create: if false; // Should be managed by a trusted backend process
+      allow update: if false; // Should be managed by a trusted backend process
+      allow delete: if false; // Should be managed by a trusted backend process
+    }
+
+    /**
+     * @description Stores content moderation results. This entire collection is locked
+     * down from all client access. It is expected to be written to and read by
+     * backend moderation services or admin tools only.
+     * @path /moderation/{moderationId}
+     * @allow N/A - All client operations are denied.
+     * @deny (get, list, create, update, delete) Any operation from any client.
+     * @principle Segregates sensitive system data from all user access.
+     */
+    match /moderation/{moderationId} {
+      allow read: if false; // For backend/admin access only
+      allow write: if false; // For backend/admin access only
+    }
+  }
+}
