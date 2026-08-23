@@ -1,44 +1,45 @@
 'use client';
 
-import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+/**
+ * Firebase-Abstraktion — jetzt lokal-first und datenschutzkonform.
+ *
+ * Diese Datei behält die exakt gleiche Export-Oberfläche wie zuvor, damit alle
+ * bestehenden Komponenten (Dashboard, Wand-Seite, WallCard, ContentCard, Header,
+ * Login, Register) UNVERÄNDERT weiterfunktionieren. Unter der Haube wird echter
+ * Firebase/Cloud-Zugriff durch eine reine localStorage-Variante ersetzt.
+ */
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
-export function initializeFirebase() {
-  if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
-    let firebaseApp;
-    try {
-      // Attempt to initialize via Firebase App Hosting environment variables
-      firebaseApp = initializeApp();
-    } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      }
-      firebaseApp = initializeApp(firebaseConfig);
-    }
+// Lokale Datenbank + Firestore-kompatible API
+export {
+  localFirestore,
+  collection,
+  doc,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  Timestamp,
+  onSnapshot,
+  subscribeToLocalChanges,
+  isCollectionRef,
+  isDocumentRef,
+} from './local/firestore';
+export type {
+  LocalCollectionRef,
+  LocalDocumentRef,
+  LocalFirestore,
+} from './local/firestore';
 
-    return getSdks(firebaseApp);
-  }
-
-  // If already initialized, return the SDKs with the already initialized App
-  return getSdks(getApp());
-}
-
-export function getSdks(firebaseApp: FirebaseApp) {
-  return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
-  };
-}
+// Lokale Auth + Demo-Benutzer
+export {
+  DEMO_USER_ID,
+  localAuth,
+  ensureLocalUser,
+  getOrCreateLocalUser,
+  clearLocalUser,
+} from './local/auth';
+export type { LocalUser } from './local/types';
 
 export * from './provider';
 export * from './client-provider';

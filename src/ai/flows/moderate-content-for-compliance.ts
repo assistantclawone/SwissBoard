@@ -1,80 +1,48 @@
-// src/ai/flows/moderate-content-for-compliance.ts
-'use server';
 /**
- * @fileOverview Implementiert die Inhaltsmoderation für Texte und prüft auf schädliche, urheberrechtlich geschützte oder illegale Inhalte, um die Einhaltung der ECAP-Richtlinien und der Schweizer Gesetze sicherzustellen.
+ * Lokale Inhaltsmoderation (datenschutzkonform, offline).
  *
- * - moderateContent - Eine Funktion, die Textinhalte moderiert.
- * - ModerateContentInput - Der Eingabetyp für die moderateContent-Funktion.
- * - ModerateContentOutput - Der Rückgabetyp für die moderateContent-Funktion.
+ * Ersetzt die frühere Genkit/Google-KI-Moderation durch eine rein lokale,
+ * regelbasierte Prüfung. Keine externe KI, kein Server, keine Daten verlassen
+ * den Browser. Erfüllt das ECAP/Schweizer-Datenschutzziel.
+ *
+ * Die frühere KI-Moderation (Genkit + Google Gemini) entfällt bewusst, weil sie
+ * US-Server einbeziehen würde und einen API-Key benötigt.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+export type ModerateContentInput = {
+  text: string;
+};
 
-const ModerateContentInputSchema = z.object({
-  text: z.string().describe('Der zu moderierende Textinhalt.'),
-});
-export type ModerateContentInput = z.infer<typeof ModerateContentInputSchema>;
+export type ModerateContentOutput = {
+  isCompliant: boolean;
+  reason: string;
+};
 
-const ModerateContentOutputSchema = z.object({
-  isCompliant: z.boolean().describe('Ob der Inhalt den ECAP-Richtlinien und den Schweizer Gesetzen entspricht.'),
-  reason: z.string().describe('Der Grund für die Nichteinhaltung, falls vorhanden.'),
-});
-export type ModerateContentOutput = z.infer<typeof ModerateContentOutputSchema>;
+/** Einfache schwarze Liste für offensichtlich problematische Begriffe (lokal geprüft). */
+const BLOCKED_PATTERNS: RegExp[] = [
+  /\b(vollidiot|hurensohn|fickt?e|vergewalti)\b/i,
+  /\b(ss|nsdap|he?il hitler)\b/i,
+];
 
+/**
+ * Moderiert Textinhalte rein lokal. Prüft auf offensichtliche
+ * Hatespeech-/Diskriminierungsmuster. Alles andere gilt als konform.
+ */
 export async function moderateContent(input: ModerateContentInput): Promise<ModerateContentOutput> {
-  return moderateContentFlow(input);
-}
+  const text = input?.text ?? '';
 
-const moderateContentPrompt = ai.definePrompt({
-  name: 'moderateContentPrompt',
-  input: {schema: ModerateContentInputSchema},
-  output: {schema: ModerateContentOutputSchema},
-  prompt: `Sie sind ein KI-Inhaltsmoderator für ECAP, eine Schweizer Bildungsorganisation. Ihre Aufgabe ist es zu bestimmen, ob der angegebene Text den Inhaltsrichtlinien von ECAP und den Schweizer Gesetzen entspricht.
-
-  Die Inhaltsrichtlinien umfassen:
-  - Keine Hassrede oder Diskriminierung
-  - Keine Urheberrechtsverletzung
-  - Keine illegalen Inhalte (z. B. Anstiftung zur Gewalt, Verleumdung)
-  - Muss den Schweizer Datenschutzgesetzen entsprechen
-
-  Antworten Sie, ob der Inhalt konform ist, und geben Sie einen Grund an, wenn dies nicht der Fall ist.
-
-  Text: {{{text}}}
-  `, config: {
-    safetySettings: [
-      {
-        category: 'HARM_CATEGORY_HATE_SPEECH',
-        threshold: 'BLOCK_ONLY_HIGH',
-      },
-      {
-        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_NONE',
-      },
-      {
-        category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-        threshold: 'BLOCK_LOW_AND_ABOVE',
-      },
-      {
-        category: 'HARM_CATEGORY_CIVIC_INTEGRITY',
-        threshold: 'BLOCK_ONLY_HIGH',
-      }
-    ],
-  },
-});
-
-const moderateContentFlow = ai.defineFlow(
-  {
-    name: 'moderateContentFlow',
-    inputSchema: ModerateContentInputSchema,
-    outputSchema: ModerateContentOutputSchema,
-  },
-  async input => {
-    const {output} = await moderateContentPrompt(input);
-    return output!;
+  for (const pattern of BLOCKED_PATTERNS) {
+    if (pattern.test(text)) {
+      return {
+        isCompliant: false,
+        reason:
+          'Der Inhalt enthält eine Formulierung, die gegen die ECAP-Inhaltsrichtlinien verstossen könnte (Hatespeech/Diskriminierung). Bitte überarbeiten Sie Ihren Beitrag.',
+      };
+    }
   }
-);
+
+  return {
+    isCompliant: true,
+    reason: '',
+  };
+}

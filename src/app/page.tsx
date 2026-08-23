@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, collection, serverTimestamp, doc, setDoc, deleteDoc, updateDoc } from '@/firebase';
 import { FullPageLoader } from '@/components/loader';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/header';
 import { WallCard } from '@/components/dashboard/wall-card';
-import { collection, serverTimestamp, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -248,13 +247,14 @@ export default function DashboardPage() {
       <Header />
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8 md:px-6">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-2">
             <h1 className="text-3xl font-bold tracking-tight">Meine Wände</h1>
             <Button onClick={() => setCreateDialogOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Neue Wand erstellen
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground mb-8">Daten bleiben lokal in deinem Browser. Kein Server, kein Cloud-Speicher.</p>
           {wallsLoading && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {[...Array(4)].map((_, i) => <div key={i} className="h-40 w-full bg-muted rounded-lg animate-pulse" />)}

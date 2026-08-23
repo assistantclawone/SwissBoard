@@ -2,23 +2,30 @@
 
 import React, { useMemo, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
-import { initializeFirebase } from '@/firebase';
+import { localFirestore } from '@/firebase/local/firestore';
+import { localAuth } from '@/firebase/local/auth';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Stellt die lokale, datenschutzkonforme Infrastruktur bereit.
+ * Kein Firebase, kein Server — alles läuft im Browser (localStorage).
+ */
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const firebaseServices = useMemo(() => {
-    // Initialize Firebase on the client side, once per component mount.
-    return initializeFirebase();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  const services = useMemo(() => {
+    return {
+      firestore: localFirestore,
+      auth: localAuth,
+    };
+  }, []);
 
   return (
     <FirebaseProvider
-      firebaseApp={firebaseServices.firebaseApp}
-      auth={firebaseServices.auth}
-      firestore={firebaseServices.firestore}
+      firebaseApp={undefined as any}
+      auth={services.auth}
+      firestore={services.firestore}
     >
       {children}
     </FirebaseProvider>

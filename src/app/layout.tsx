@@ -26,6 +26,9 @@ export default function RootLayout({
           {children}
         </FirebaseClientProvider>
         <Toaster />
+        <footer className="border-t border-border/60 py-3 text-center text-xs text-muted-foreground">
+          🌿 SwissBoard läuft <span className="font-medium">lokal-first</span>: Ihre Daten bleiben ausschliesslich in Ihrem Browser. Kein Server, kein Cloud-Speicher, niemand sonst hat Zugriff.
+        </footer>
       </body>
     </html>
   );
