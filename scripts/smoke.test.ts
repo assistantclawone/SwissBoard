@@ -6,13 +6,13 @@
 const store = new Map();
 globalThis.window = {
   localStorage: {
-    getItem: (k) => (store.has(k) ? store.get(k) : null),
-    setItem: (k, v) => store.set(k, String(v)),
-    removeItem: (k) => store.delete(k),
+    getItem: (k: string) => (store.has(k) ? store.get(k) : null),
+    setItem: (k: string, v: unknown) => store.set(k, String(v)),
+    removeItem: (k: string) => store.delete(k),
   },
 } as any;
 
-const assert = (cond, msg) => {
+const assert = (cond: unknown, msg: string) => {
   if (!cond) {
     console.error('FAIL:', msg);
     process.exitCode = 1;
@@ -23,9 +23,9 @@ const assert = (cond, msg) => {
 
 async function main() {
   // Import the shim modules (paths resolve via tsconfig @/ alias in tsx).
-  const fire = await import('../src/firebase/local/firestore.ts');
-  const dbmod = await import('../src/firebase/local/db.ts');
-  const authmod = await import('../src/firebase/local/auth.ts');
+  const fire = await import('../src/firebase/local/firestore');
+  const dbmod = await import('../src/firebase/local/db');
+  const authmod = await import('../src/firebase/local/auth');
 
   const { localFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } = fire;
   const { loadDb, getPath } = dbmod;
@@ -49,7 +49,7 @@ async function main() {
 
   // 3) Read back via useCollection-style read
   const db = loadDb();
-  const wallsMap = getPath(db, `users/${uid}/walls`);
+  const wallsMap = getPath(db, `users/${uid}/walls`) as Record<string, unknown>;
   assert(wallsMap && wallsMap[wallId], 'Wand ist in localStorage gespeichert');
 
   // 4) Add posts to the wall's content subcollection
@@ -81,19 +81,19 @@ async function main() {
   // 6) Update a post (rename/position via updateDoc)
   await updateDoc(doc(contentCol, postRef.id), { data: 'Aktualisierter Inhalt' });
   const db3 = loadDb();
-  const post = getPath(db3, `users/${uid}/walls/${wallId}/content/${postRef.id}`);
-  assert(post.data === 'Aktualisierter Inhalt', 'updateDoc aktualisiert den Beitrag');
+  const post: Record<string, unknown> = getPath(db3, `users/${uid}/walls/${wallId}/content/${postRef.id}`) as Record<string, unknown>;
+  assert((post as { data?: string }).data === 'Aktualisierter Inhalt', 'updateDoc aktualisiert den Beitrag');
 
   // 7) Delete a post
   await deleteDoc(doc(contentCol, postRef.id));
   const db4 = loadDb();
-  const contentMap4 = getPath(db4, `users/${uid}/walls/${wallId}/content`);
+  const contentMap4 = getPath(db4, `users/${uid}/walls/${wallId}/content`) as Record<string, unknown>;
   assert(!contentMap4 || !contentMap4[postRef.id], 'deleteDoc entfernt den Beitrag');
 
   // 8) Delete the wall
   await deleteDoc(doc(localFirestore, 'users', uid, 'walls', wallId));
   const db5 = loadDb();
-  const wallsMap5 = getPath(db5, `users/${uid}/walls`);
+  const wallsMap5 = getPath(db5, `users/${uid}/walls`) as Record<string, unknown>;
   assert(!wallsMap5 || !wallsMap5[wallId], 'deleteDoc entfernt die Wand');
 
   console.log('\nAlle lokalen Datenoperationen funktionieren wie erwartet.');

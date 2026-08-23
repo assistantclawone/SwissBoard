@@ -23,7 +23,6 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
 
   return (
     <FirebaseProvider
-      firebaseApp={undefined as any}
       auth={services.auth}
       firestore={services.firestore}
     >

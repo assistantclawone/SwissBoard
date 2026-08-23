@@ -272,7 +272,6 @@ export default function DashboardPage() {
                 <WallCard 
                   key={wall.id} 
                   wall={wall} 
-                  ownerId={user.uid} 
                   onEdit={() => setEditingWall(wall)}
                   onDelete={() => setDeletingWallId(wall.id)}
                 />

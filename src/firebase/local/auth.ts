@@ -8,8 +8,8 @@
  * im Browser (localStorage) liegen. Keine Daten werden an einen Server gesendet.
  */
 
-import { LocalTimestamp, LocalUser } from './types';
-import { loadDb, saveDb, now } from './db';
+import { LocalUser } from './types';
+import { loadDb, saveDb, now, type LocalTimestamp } from './db';
 
 export const DEMO_USER_ID = 'demo-lokal';
 

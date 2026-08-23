@@ -5,7 +5,8 @@ import { LocalDocumentRef } from '@/firebase/local/firestore';
 import { loadDb, getPath } from '@/firebase/local/db';
 import { subscribeToLocalChanges } from '@/firebase/local/firestore';
 
-export type WithId<T> = T & { id: string };
+export type { WithId } from './use-collection';
+import type { WithId } from './use-collection';
 
 export interface UseDocResult<T> {
   data: WithId<T> | null;

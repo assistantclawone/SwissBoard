@@ -18,8 +18,8 @@ export type StoredDb = {
 };
 
 export type StoredUser = {
-  email?: string;
-  name?: string;
+  email?: string | null;
+  name?: string | null;
   createdAt?: LocalTimestamp;
   walls: Record<string, StoredWall>;
 };
