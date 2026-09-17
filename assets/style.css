@@ -89,7 +89,7 @@ nav.main a.cta:hover{background:var(--navy-2);text-decoration:none}
 /* ---------- Sections ---------- */
 section{padding:66px 0}
 section.alt{background:var(--sand)}
-h2{font-size:32px;color:var(--navy);margin:0 0 12px;letter-spacing:-.4px}
+h2{font-size:32px;color:var(--navy);margin:0 0 12px;letter-spacing:-.4px;line-height:1.2}
 h3{font-size:20px;color:var(--navy);margin:0 0 8px}
 .sub{color:var(--grey);font-size:17px;max-width:88ch;margin:0 0 36px}
 
@@ -114,7 +114,7 @@ h3{font-size:20px;color:var(--navy);margin:0 0 8px}
 .card .price{margin-top:auto;padding-top:18px;font-weight:700;color:var(--navy);white-space:nowrap;font-size:15.5px}
 .card ul{min-height:104px}
 .card h3{min-height:0}
-.grid.c4 .card h3{min-height:74px;font-size:18.5px;overflow-wrap:anywhere;hyphens:auto}
+.grid.c4 .card h3{min-height:74px;font-size:18.5px;hyphens:auto}
 
 /* Process */
 .steps{counter-reset:s;display:grid;gap:18px;grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -183,7 +183,7 @@ body.print .avoid-break{break-inside:avoid}
   .brand .brand-sub{display:none}
 }
 @media (max-width:900px){
-  .hero .wrap{grid-template-columns:1fr;gap:34px;padding:48px 24px}
+  .hero .wrap{grid-template-columns:1fr;gap:34px;padding:48px 24px 38px}
   .hero .photo{max-width:420px;margin:0 auto}
   .grid.c5{grid-template-columns:repeat(2,minmax(0,1fr))}
   .hero h1{font-size:34px}
@@ -192,19 +192,20 @@ body.print .avoid-break{break-inside:avoid}
   nav.main a:not(.cta){display:none}
 }
 @media (max-width:680px){
-  .grid.c4,.grid.c3,.grid.c5,.grid.c2,.steps{grid-template-columns:1fr}
+  .grid.c4,.grid.c3,.grid.c5,.grid.c2,.steps,.services{grid-template-columns:1fr}
   .grid.c4 .card h3,.services .card h3,.card ul{min-height:0}
   h2{font-size:27px}
   .hero h1{font-size:31px}
+  .trust{grid-template-columns:1fr 1fr}
 }
 @media (max-width:560px){
   .wrap{padding:0 18px}
-  .grid.c4,.grid.c3,.grid.c5,.grid.c2,.steps{grid-template-columns:1fr}
+  .grid.c4,.grid.c3,.grid.c5,.grid.c2,.steps,.services{grid-template-columns:1fr}
   .hero h1{font-size:28px;letter-spacing:-.3px}
   .hero p.lead{font-size:17.5px}
-  .hero .wrap{padding:38px 18px 42px}
+  .hero .wrap{padding:34px 18px 34px}
   section{padding:48px 0}
-  h2{font-size:25px}
+  h2{font-size:25px;line-height:1.22}
   h3{font-size:18.5px}
   .sub{font-size:16px;margin-bottom:26px}
   .card ul{min-height:0}
@@ -221,6 +222,8 @@ body.print .avoid-break{break-inside:avoid}
   .foot-brand{flex-direction:column;align-items:flex-start;gap:8px}
   details{padding:16px}
   .contact-list li{font-size:15px;overflow-wrap:break-word}
+  .contact-head{gap:14px}
+  .contact-avatar{width:64px;height:64px}
 }
 @media (max-width:400px){
   .hero h1{font-size:25px}
@@ -228,6 +231,7 @@ body.print .avoid-break{break-inside:avoid}
   .wrap{padding:0 15px}
   .trust{grid-template-columns:1fr}
   .card{padding:19px}
+  .btn{padding:12px 18px;font-size:15px}
 }
 
 /* ---------- Wortmarke & Kontakt ---------- */
@@ -262,6 +266,18 @@ html,body{overflow-x:hidden}
 h1,h2,h3{hyphens:auto;-webkit-hyphens:auto}
 img,svg{max-width:100%;height:auto}
 
+/* Knöpfe und kurze Labels never hyphenate/break */
+.btn,.badge,.eyebrow,.card .ico,.step:before,nav.main a,th,td.price,.card .hint{
+  hyphens:none;-webkit-hyphens:none;overflow-wrap:normal;word-break:keep-all;
+}
+.btn{white-space:normal}
+
+/* Titelhöhen nur dort erzwingen, wo es Platz gibt */
+@media (max-width:900px){
+  .services .card h3,.grid.c4 .card h3{min-height:0}
+  .card ul,.grid.c4 .card ul{min-height:0}
+}
+
 /* Leistungsübersicht: gleiche Titelhöhe -> gleiche Bullet-Baseline */
 .services .card h3{min-height:48px;display:flex;align-items:flex-start}
 .services .card p.small.eyebrow{min-height:18px;margin:0 0 8px}
@@ -272,4 +288,5 @@ img,svg{max-width:100%;height:auto}
 /* Abschluss-Kachel */
 .card.cta-card{background:linear-gradient(160deg,#f4faf8,#eaf3f0);border-color:rgba(15,122,108,.28)}
 .card.cta-card .ico{background:var(--teal);color:#fff}
-.card.cta-card .btn{margin-top:auto;width:100%;justify-content:center;text-align:center}
+.card.cta-card .btn{margin-top:auto;width:100%;justify-content:center;text-align:center;min-height:46px;align-items:center;display:inline-flex;padding-bottom:14px}
+.card.cta-card{padding-bottom:24px}
