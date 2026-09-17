@@ -278,8 +278,10 @@ img,svg{max-width:100%;height:auto}
   .card ul,.grid.c4 .card ul{min-height:0}
 }
 
-/* Leistungsübersicht: gleiche Titelhöhe -> gleiche Bullet-Baseline */
-.services .card h3{min-height:48px;display:flex;align-items:flex-start}
+/* Leistungsübersicht: gleiche Titelhöhe -> gleiche Bullet-Baseline (nur wo Platz ist) */
+@media (min-width:681px){
+  .services .card h3{min-height:48px;display:flex;align-items:flex-start}
+}
 .services .card p.small.eyebrow{min-height:18px;margin:0 0 8px}
 .services .card ul{min-height:0}
 .services .card{hyphens:auto;-webkit-hyphens:auto}
@@ -290,3 +292,17 @@ img,svg{max-width:100%;height:auto}
 .card.cta-card .ico{background:var(--teal);color:#fff}
 .card.cta-card .btn{margin-top:auto;width:100%;justify-content:center;text-align:center;min-height:46px;align-items:center;display:inline-flex;padding-bottom:14px}
 .card.cta-card{padding-bottom:24px}
+
+/* ---------- Endgültige Mobil-Regeln (müssen zuletzt stehen) ---------- */
+@media (max-width:680px){
+  .grid.c4,.grid.c3,.grid.c5,.grid.c2,.steps,.services,.grid.c3.services{grid-template-columns:1fr}
+  .services .card h3,.grid.c4 .card h3{min-height:0}
+  .card ul,.grid.c4 .card ul{min-height:0}
+  .services .card h3{display:block}
+}
+@media (max-width:560px){
+  .grid.c4,.grid.c3,.grid.c5,.grid.c2,.steps,.services,.grid.c3.services{grid-template-columns:1fr}
+}
+@media (max-width:400px){
+  .grid.c4,.grid.c3,.grid.c5,.grid.c2,.steps,.services,.grid.c3.services{grid-template-columns:1fr}
+}
